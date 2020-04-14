@@ -1,0 +1,15 @@
+# IDE
+.vscode/
+
+# Python
+.eggs/
+*.egg-info/
+__pycache__/
+.tox/
+.coverage
+
+# Morpher
+*.log
+
+# Testing
+test.db

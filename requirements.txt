@@ -1,0 +1,3 @@
+morpher @ git+ssh://git@github.com/hpi-dhc/morpher.git@tm/refactor-and-code-style
+fiber @ git+ssh://git@github.com/hpi-dhc/fiber.git@development
+fiberutils @ git+ssh://git@github.com/hpi-dhc/fiber-utils@master
