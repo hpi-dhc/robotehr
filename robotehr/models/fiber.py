@@ -57,6 +57,18 @@ class Cohort(Base):
         obj = cls.load(id)
         return obj.get_fiber()
 
+    def __repr__(self):
+        return f'{self.comment} ({self.version}), created at {self.created_at}'
+
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'comment': self.comment,
+            'version': self.version,
+            'created_at': self.created_at,
+            'size': len(self.get_fiber())
+        }
+
 
 class OnsetDataFrame(Base):
     __tablename__ = 'onset_df'
@@ -109,3 +121,16 @@ class OnsetDataFrame(Base):
     def load_df(cls, id, target=''):
         obj = cls.load(id)
         return obj.get_df(obj.id, target)
+
+    def __repr__(self):
+        return f'{self.comment} ({self.version}), created at {self.created_at}'
+
+    def as_dict(self):
+        df = self.get_df()
+        return {
+            'comment': self.comment,
+            'version': self.version,
+            'created_at': self.created_at,
+            'size': list(df.shape),
+            'targets': [c for c in df.columns if c not in OCCURRENCE_INDEX]
+        }

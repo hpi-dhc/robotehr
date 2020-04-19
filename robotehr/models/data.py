@@ -116,3 +116,13 @@ class FeaturePipeline(Base):
     @property
     def runtime(self):
         return self.end_time - self.start_time
+
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'comment': self.comment,
+            'version': self.version,
+            'start_time': self.start_time,
+            'runtime': str(self.runtime),
+            'cohort_id': self.cohort_id
+        }

@@ -1,15 +1,17 @@
 import math
 
+import dill
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from morpher.plots import plot_dc
 
-from robotehr.controllers import get_training_results
+from robotehr.api.training import get_training_results
 
 
 def average_metric_score_by_parameter(pipeline_id, metric, parameter):
-    df = get_training_results(pipeline_id, sort_by=metric, columns=[parameter], metrics=[metric])
+    df = get_training_results(pipeline_id, sort_by=metric, columns=[parameter], metrics=[metric], response_type="pandas")
     df = df.groupby(parameter).mean().sort_values(by=metric, ascending=False).reset_index()
     return df
 
@@ -54,7 +56,7 @@ def performance_heatmap(
     annot=False,
     filename=None
 ):
-    df = get_training_results(pipeline_id, metrics=metrics)
+    df = get_training_results(pipeline_id, metrics=metrics, response_type="pandas")
     fig = plt.figure(figsize=(10 * len(algorithms), 10 * len(metrics)))
 
     vmins = {}
@@ -108,7 +110,7 @@ def get_quandrant_averages(
 
     threshold_column = f'threshold_{lead_condition_type}'
     window_start_column = f'window_start_{lead_condition_type}'
-    df = get_training_results(pipeline_id, metrics=metrics)
+    df = get_training_results(pipeline_id, metrics=metrics, response_type="pandas")
     data = df[
         (df.algorithm == algorithm)
         & (df.target == target)
@@ -208,8 +210,8 @@ def performance_diff_heatmap(
     filename=None
 ):
     df = [
-        get_training_results(pipeline_ids[0], metrics=metrics),
-        get_training_results(pipeline_ids[1], metrics=metrics)
+        get_training_results(pipeline_ids[0], metrics=metrics, response_type="pandas"),
+        get_training_results(pipeline_ids[1], metrics=metrics, response_type="pandas")
     ]
     fig = plt.figure(figsize=(10 * len(algorithms), 10 * len(metrics)))
 
@@ -263,3 +265,103 @@ def performance_diff_heatmap(
     if filename:
         fig.savefig(filename, dpi=300, bbox_inches="tight")
     return fig
+
+
+def multiple_pipeline_comparison(
+    pipeline_ids,
+    metric,
+    data_points_per_pipeline=None,
+    plot_type="box",
+    restrictions=[]
+):
+    results = pd.DataFrame(columns=[metric, 'window_end_numeric'])
+    for pipeline_id in pipeline_ids:
+        cur_results = get_training_results(
+            pipeline_id,
+            sort_by=metric,
+            metrics=[metric, 'window_end_numeric'],
+            response_type="pandas"
+        )[[metric, 'window_end_numeric', *[i[0] for i in restrictions]]]
+
+        for col, filter_type, limit in restrictions:
+            if filter_type == '__lt__':
+                cur_results = cur_results[cur_results[col].__lt__(limit)]
+            if filter_type == '__gt__':
+                cur_results = cur_results[cur_results[col].__gt__(limit)]
+            if filter_type == '__eq__':
+                cur_results = cur_results[cur_results[col].__eq__(limit)]
+
+        if data_points_per_pipeline:
+            cur_results = cur_results.sort_values(
+                by=metric, ascending=False
+            ).iloc[:data_points_per_pipeline]
+
+        results = results.append(
+            cur_results,
+            ignore_index=True
+        )
+
+    results.window_end_numeric += 1
+    data = results.rename(columns={
+        "window_end_numeric": "days after tx",
+    })
+    if plot_type == "box":
+        return sns.boxplot(
+            x="days after tx",
+            y=metric,
+            data=data
+        )
+    else:
+        return sns.scatterplot(
+            x="days after tx",
+            y=metric,
+            data=data
+        )
+
+
+def multiple_pipeline_rfe_effects(pipelines, metric, restrictions=[]):
+    results = []
+    for name, runs in pipelines.items():
+        for identifier, uses_rfe in runs:
+            cur_results = get_training_results(
+                identifier,
+                metric,
+                metrics=[metric],
+                response_type="pandas"
+            )
+            for col, filter_type, limit in restrictions:
+                if filter_type == '__lt__':
+                    cur_results = cur_results[cur_results[col].__lt__(limit)]
+                if filter_type == '__gt__':
+                    cur_results = cur_results[cur_results[col].__gt__(limit)]
+                if filter_type == '__eq__':
+                    cur_results = cur_results[cur_results[col].__eq__(limit)]
+
+            for r in cur_results[metric]:
+                results.append({metric: r, 'baseline': name, 'uses_rfe': uses_rfe})
+
+    data = pd.DataFrame(data=results, columns=[metric, 'baseline', 'uses_rfe'])
+    ax = sns.boxplot(x="baseline", y=metric, hue="uses_rfe", data=data)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., title="Use RFE-CV")
+    return ax
+
+
+def clinical_usefulness_graph(training_results, metric_type="treated"):
+    plt.figure(figsize=[16,16])
+    for tr in training_results:
+        outcome = dill.load(open(tr.evaluation_path, 'rb'))
+        for index, row in outcome.iterrows():
+            plot_dc(
+                results={
+                    tr.sampler: {
+                        'y_true': row.y_true,
+                        'y_pred': row.y_pred,
+                        'y_probs': row.y_probs,
+                        'label': f'{tr.sampler} / {tr.training_configuration.threshold_numeric} / {tr.training_configuration.window_start_occurring} | (fold #{index})'
+                    }
+                },
+                tr_start=0.01,
+                tr_end=0.99,
+                tr_step=0.01,
+                metric_type=metric_type
+            )

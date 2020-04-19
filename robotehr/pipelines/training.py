@@ -225,7 +225,7 @@ def execute(
     feature_type_numeric,
     bin_size=30,
     rfe__run=False,
-    rfe__step_size=20
+    rfe__step_size=50
 ):
     training_pipeline = TrainingPipeline.create(
         comment=comment,

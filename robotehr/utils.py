@@ -1,7 +1,9 @@
 import dill
 import json
 
+import numpy as np
 import requests
+from morpher.metrics import get_net_benefit_metrics
 from sklearn.metrics import (
     accuracy_score,
     auc,
@@ -79,3 +81,22 @@ def score_auroc(estimator, X, y):
     """
     y_pred = estimator.predict_proba(X)
     return roc_auc_score(y, y_pred[:, 1])
+
+
+def score_auc_nbc(training_result, tr_start=0.01, tr_end=0.99, tr_step=0.01, metric_type="treated"):
+    auc_nbc = []
+    outcome = dill.load(open(training_result.evaluation_path, 'rb'))
+    for index, row in outcome.iterrows():
+        tr_probs = np.arange(tr_start, tr_end + tr_step, tr_step)
+        y_true = row.y_true
+        y_probs = row.y_probs
+
+        net_benefit, _ = get_net_benefit_metrics(
+            y_true,
+            y_probs,
+            tr_probs,
+            metric_type
+        )
+        auc_nbc.append(auc(tr_probs, net_benefit))
+    scores = np.array(auc_nbc)
+    return scores.mean(), scores.std()

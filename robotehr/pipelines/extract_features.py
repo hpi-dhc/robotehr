@@ -136,13 +136,19 @@ def execute(configuration, comment, version, cohort):
 
     min_threshold = configuration["min_threshold"]
     pivot_configurations = configuration["pivot_configurations"]
-    for pivot_c in pivot_configurations:
+    number_of_configs = len(pivot_configurations)
+    for i in range(number_of_configs):
         pivot_data(
-            pivot_configuration=pivot_c,
+            pivot_configuration=pivot_configurations[i],
             min_threshold=min_threshold,
             cohort=cohort,
             feature_pipeline=feature_pipeline
         )
+        if i % 100 == 0:
+            http_post(
+                WEBHOOK_URL,
+                {"text": f"{i+1} iterations of feature extraction for '{comment}' in version {version} done of {number_of_configs}."} # noqa
+            )
 
     # End pipeline
     feature_pipeline.end_pipeline()

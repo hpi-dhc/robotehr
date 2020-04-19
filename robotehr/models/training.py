@@ -71,6 +71,21 @@ class TrainingPipeline(Base):
     def runtime(self):
         return self.end_time - self.start_time
 
+    def __repr__(self):
+        return f'{self.comment} - {self.version} - started {self.start_time}, finished in {self.runtime}.'
+
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'comment': self.comment,
+            'version': self.version,
+            'start_time': self.start_time,
+            'runtime': str(self.runtime),
+            'feature_pipeline_id': self.feature_pipeline_id,
+            'onset_dataframe_id': self.onset_dataframe_id,
+            'cohort_id': self.cohort_id
+        }
+
 
 class TrainingConfiguration(Base):
     __tablename__ = 'training_configuration'
@@ -130,6 +145,22 @@ class TrainingConfiguration(Base):
         ).first()
         return obj
 
+    def __repr__(self):
+        return f'{self.threshold_occurring} - [{self.window_start_occurring}, {self.window_end_occurring}] - {self.feature_type_occurring}/{self.feature_type_numeric}'
+
+    def as_dict(self):
+        return {
+            'threshold_occurring': self.threshold_occurring,
+            'window_start_occurring': self.window_start_occurring,
+            'window_end_occurring': self.window_end_occurring,
+            'threshold_numeric': self.threshold_numeric,
+            'window_start_numeric': self.window_start_numeric,
+            'window_end_numeric': self.window_end_numeric,
+            'feature_type_occurring': self.feature_type_occurring,
+            'feature_type_numeric': self.feature_type_numeric,
+            'target': self.target,
+        }
+
 class TrainingData(Base):
     __tablename__ = 'training_data'
     __table_args__ = {'extend_existing': True}
@@ -155,6 +186,14 @@ class TrainingData(Base):
         session.add(obj)
         session.commit()
         return obj
+
+    def __repr__(self):
+        return f'{self.path}'
+
+    def as_dict(self):
+        return {
+            'path': self.path
+        }
 
 
 class TrainingResult(Base):
@@ -263,3 +302,19 @@ class TrainingResult(Base):
             ]
         columns = cls.__table__.columns.keys()
         return [c for c in columns if c not in undesired_columns]
+
+    def __repr__(self):
+        return f'{self.algorithm} / {self.sampler} | AUROC: {self.auc_roc_mean:.2f}, AUPRC: {self.auc_prc_mean:.2f}, F1: {self.f1_mean:.2f}'
+
+    def as_dict(self):
+        return {
+            'algorithm': self.algorithm,
+            'sampler': self.sampler,
+            'auc_roc_mean': self.auc_roc_mean,
+            'auc_prc_mean': self.auc_prc_mean,
+            'f1_mean': self.f1_mean,
+            'accuracy_mean': self.accuracy_mean,
+            'precision_mean': self.precision_mean,
+            'recall_mean': self.recall_mean,
+            'average_precision_mean': self.average_precision_mean,
+        }
