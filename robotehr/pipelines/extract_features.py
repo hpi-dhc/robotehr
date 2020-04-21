@@ -84,51 +84,36 @@ def pivot_data(
             min_threshold=min_threshold,
             **pivot_configuration
         )
-        for c in configs:
-            df = fiber_cohort.pivot_all_for(**c).reset_index()
-            Feature.persist(
-                df=df,
-                min_threshold=min_threshold,
-                feature_pipeline=feature_pipeline,
-                feature_type=feature_type,
-                **c
-            )
-
     elif feature_type in ["numeric_binned", "occurring_binned"]:
         configs = _build_binned_configs(
             min_threshold=min_threshold,
             **pivot_configuration
         )
-        for c in configs:
-            df = fiber_cohort.pivot_all_for(**c).reset_index()
-            Feature.persist(
-                df=df,
-                min_threshold=min_threshold,
-                feature_pipeline=feature_pipeline,
-                feature_type=feature_type,
-                **c
-            )
-
     elif feature_type in ["numeric_time_series"]:
         configs = _build_time_series_configs(
             min_threshold=min_threshold,
             **pivot_configuration
         )
 
-        for c in configs:
+    # TODO: parallelize this step
+    for c in configs:
+        if feature_type in ["numeric", "occurring", "numeric_binned", "occurring_binned"]:
+            df = fiber_cohort.pivot_all_for(**c).reset_index()
+        elif feature_type in ["numeric_time_series"]:
             df = get_time_series(
                 cohort=fiber_cohort,
                 condition=c["condition"],
                 window=c["window"],
                 threshold=min_threshold
             ).reset_index()
-            Feature.persist(
-                df=df,
-                min_threshold=min_threshold,
-                feature_pipeline=feature_pipeline,
-                feature_type=feature_type,
-                **c
-            )
+
+        Feature.persist(
+            df=df,
+            min_threshold=min_threshold,
+            feature_pipeline=feature_pipeline,
+            feature_type=feature_type,
+            **c
+        )
 
 
 def execute(configuration, comment, version, cohort):
@@ -144,11 +129,6 @@ def execute(configuration, comment, version, cohort):
             cohort=cohort,
             feature_pipeline=feature_pipeline
         )
-        if i % 100 == 0:
-            http_post(
-                WEBHOOK_URL,
-                {"text": f"{i+1} iterations of feature extraction for '{comment}' in version {version} done of {number_of_configs}."} # noqa
-            )
 
     # End pipeline
     feature_pipeline.end_pipeline()
