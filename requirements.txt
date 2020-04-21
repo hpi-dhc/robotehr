@@ -1,6 +1,6 @@
-morpher @ git+ssh://git@github.com/hpi-dhc/morpher.git@tm/refactor-and-code-style
-fiber @ git+ssh://git@github.com/hpi-dhc/fiber.git@development
-fiberutils @ git+ssh://git@github.com/hpi-dhc/fiber-utils@master
+morpher @ git+https://github.com/hpi-dhc/morpher.git@tm/refactor-and-code-style
+fiber @ git+https://github.com/hpi-dhc/fiber.git@development
+fiberutils @ git+https://github.com/hpi-dhc/fiber-utils@master
 Flask==1.1.2
 python-dotenv==0.13.0
 psycopg2==2.8.5
