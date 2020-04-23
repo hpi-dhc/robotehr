@@ -3,7 +3,7 @@ from itertools import product
 from fiberutils.cohort_utils import get_time_series
 
 from robotehr.config import WEBHOOK_URL
-from robotehr.models.fiber import Cohort
+from robotehr.models.cohort import Cohort
 from robotehr.models.data import Feature, FeaturePipeline
 from robotehr.utils import http_post
 

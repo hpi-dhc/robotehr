@@ -12,8 +12,9 @@ from robotehr.config import WEBHOOK_URL
 from robotehr.models import session
 from robotehr.models.data import Feature
 from robotehr.models.training import TrainingConfiguration, TrainingData, TrainingPipeline, TrainingResult
-from robotehr.pipelines import recursive_feature_selection
-from robotehr.utils import http_post, calculate_metrics
+from robotehr.pipelines.supporters.preprocessing import recursive_feature_elimination
+from robotehr.pipelines.supporters.scoring import calculate_metrics
+from robotehr.utils import http_post
 
 
 def load_features_and_transform(
@@ -160,7 +161,7 @@ def train_iteration(
     iterator = product(algorithms, samplers)
     for algorithm in algorithms:
         if rfe__run and algorithm().clf.__class__ != DummyClassifier:
-            result = recursive_feature_selection.execute(
+            result = recursive_feature_elimination(
                 X=X,
                 y=y,
                 step_size=rfe__step_size,
@@ -183,7 +184,7 @@ def train_iteration(
 
                 X_train_sampled, y_train_sampled = sampler().fit_resample(X_train, y_train)
                 clf = algorithm()
-                clf.fit(X_train, y_train)
+                clf.fit(X_train_sampled, y_train_sampled)
 
                 evaluation = {
                     'y_true': y_test,

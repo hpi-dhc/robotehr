@@ -2,7 +2,7 @@ from flask import request
 
 
 from robotehr.models import engine, session
-from robotehr.models.fiber import Cohort
+from robotehr.models.cohort import Cohort
 from robotehr.api import app
 from robotehr.api.helpers import assert_response_type, build_response, sort_and_filter
 

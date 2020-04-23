@@ -10,7 +10,7 @@ from sqlalchemy.orm import relationship
 
 from robotehr.config import BASE_PATH
 from robotehr.models import Base, session
-from robotehr.models.fiber import Cohort, OnsetDataFrame
+from robotehr.models.cohort import Cohort, OnsetDataFrame
 from robotehr.models.data import FeaturePipeline
 
 

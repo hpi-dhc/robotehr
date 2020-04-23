@@ -20,4 +20,4 @@ if not app.debug:
     app.logger.setLevel(logging.INFO)
     app.logger.info('RobotEHR API')
 
-from robotehr.api import training, cohort, feature
+from robotehr.api import cohort, feature, training

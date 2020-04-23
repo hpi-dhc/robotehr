@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 
 from robotehr.config import BASE_PATH
 from robotehr.models import Base, session
-from robotehr.models.fiber import Cohort
+from robotehr.models.cohort import Cohort
 
 
 class Feature(Base):
