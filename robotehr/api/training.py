@@ -1,10 +1,6 @@
-import json
-
-import pandas as pd
-from sqlalchemy import orm, asc, desc
 from flask import request
 
-from robotehr.models import engine, session
+from robotehr.models import session
 from robotehr.models.training import (
     TrainingConfiguration,
     TrainingPipeline,
@@ -69,3 +65,16 @@ def get_training_pipelines(
     q = session.query(TrainingPipeline)
     q = sort_and_filter(q, sort_by=sort_by, **kwargs)
     return build_response(q.all(), response_type)
+
+
+@app.route('/api/training/config')
+def get_training_configuration(
+    pipeline_id=None,
+    response_type="json",
+    config=None
+):
+    assert_response_type(response_type)
+    pipeline_id = pipeline_id or request.args.get('pipeline', type=int)
+    config = config or request.args
+    tc = TrainingConfiguration.load_by_config(pipeline_id, config)
+    return build_response(tc, response_type)

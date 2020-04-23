@@ -118,7 +118,6 @@ def load_features_and_transform(
     )
 
     X, y = data.drop(columns=[target]), data[target]
-    print(X.shape)
     return X, y
 
 

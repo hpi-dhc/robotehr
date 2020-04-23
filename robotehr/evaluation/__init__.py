@@ -325,7 +325,7 @@ def multiple_pipeline_rfe_effects(pipelines, metric, restrictions=[]):
         for identifier, uses_rfe in runs:
             cur_results = get_training_results(
                 identifier,
-                metric,
+                sort_by=metric,
                 metrics=[metric],
                 response_type="pandas"
             )

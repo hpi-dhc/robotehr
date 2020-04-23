@@ -6,7 +6,7 @@ from sklearn.model_selection import StratifiedKFold
 from robotehr.models.training import TrainingConfiguration
 from robotehr.utils import calculate_metrics, DataLoader, score_auroc
 
-def execute(X, y, algorithm, step_size, create_figure=False, filename="", n_splits=5):
+def execute(X, y, algorithm, step_size=50, create_figure=False, filename="", n_splits=5):
     estimator = algorithm()
     rfecv = RFECV(
         estimator=estimator,
@@ -18,11 +18,11 @@ def execute(X, y, algorithm, step_size, create_figure=False, filename="", n_spli
     )
     rfecv.fit(X, y)
 
-    steps = list(range(len(X.columns), 0, -step_size))
-    if 1 not in steps:
-        steps.append(1)
-    steps.reverse()
     if create_figure:
+        steps = list(range(len(X.columns), 0, -step_size))
+        if 1 not in steps:
+            steps.append(1)
+        steps.reverse()
         fig = plt.figure()
         plt.xlabel("Number of features selected")
         plt.ylabel("Cross validated auroc score")
