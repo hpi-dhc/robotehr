@@ -1,3 +1,4 @@
+import dill
 from sklearn.feature_selection import RFECV
 from sklearn.model_selection import StratifiedKFold
 

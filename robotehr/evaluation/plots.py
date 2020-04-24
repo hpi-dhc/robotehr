@@ -1,4 +1,4 @@
-def clinical_usefulness_graph(training_results, metric_type="treated", filename):
+def clinical_usefulness_graph(training_results, metric_type="treated", filename=""):
     fig = plt.figure(figsize=[16,16])
     for tr in training_results:
         outcome = dill.load(open(tr.evaluation_path, 'rb'))

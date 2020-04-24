@@ -24,5 +24,5 @@ def get_cohorts(
 ):
     assert_response_type(response_type)
     q = session.query(Cohort)
-    q = sort_and_filter(q, sort_by=Cohort.created_at, **kwargs)
+    q = sort_and_filter(q, sort_by=sort_by, **kwargs)
     return build_response(q.all(), response_type)
