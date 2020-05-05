@@ -3,7 +3,6 @@ from morpher.jobs import Explain
 from sklearn.model_selection import train_test_split
 
 from robotehr.api.training import get_training_configuration
-from robotehr.pipelines.supporters.restoration import restore_model
 
 
 def static_risk_change_analysis(
@@ -45,17 +44,14 @@ def _risk_change_by_boolean_feature(df, target, trait):
 
 
 def global_explanation(
-    pipeline_id,
-    config,
-    algorithm,
-    sampler,
+    predictor,
     explainers,
-    num_features=20
+    num_features=20,
 ):
-    results = restore_model(pipeline_id, config, algorithm, sampler)
-    X = results['X']
-    y = results['y']
-    clf = results['clf']
+    data = predictor.get_data()
+    X = data[predictor.get_features()]
+    y = predictor.get_target()
+    clf = predictor.get_clf()
 
     X_train, X_test, y_train, y_test = train_test_split(
         X,

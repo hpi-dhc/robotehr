@@ -1,4 +1,7 @@
+import inspect
 import json
+import sys
+from pydoc import locate
 
 import requests
 
@@ -14,3 +17,46 @@ def http_post(url, data, headers={}):
             % (response.status_code, response.text)
         )
     return response
+
+
+class FriendlyNamesConverter:
+    def get(self, feature):
+        # does not support time window information inside feature name yet
+        if (
+            feature == "age_in_days"
+        ) or (
+            feature.startswith(('gender', 'religion'))
+        ):
+            return feature.replace('_', ' ')
+
+        split_name = feature.split('__')
+        if split_name[1] in [
+            i[0]
+            for i in inspect.getmembers(
+                sys.modules['fiber.condition'],
+                inspect.isclass
+            )
+        ]:
+            aggregation = split_name[0]
+            split_name = split_name[1:]
+        else:
+            aggregation = "time series"
+
+        if len(split_name) == 3:
+            class_name, context, code = split_name
+            condition_class = locate(f'fiber.condition.{class_name}')
+            description = self.get_description(condition_class, code, context)
+        else:
+            class_name, description = split_name
+
+        return f'{class_name} | {description.capitalize()} ({aggregation})'
+
+    def get_description(self, condition_class, code, context):
+        return condition_class(
+            code=code,
+            context=context
+        ).patients_per(
+            condition_class.description_column
+        )[
+            condition_class.description_column.name.lower()
+        ].iloc[0]

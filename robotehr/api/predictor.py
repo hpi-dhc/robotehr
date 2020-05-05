@@ -37,10 +37,13 @@ def get_predictor_details(predictor_id=None, response_type="json"):
         return build_response(cohort.as_dict(), response_type)
 
 
-def save_predictor(df, clf, comment, version, target, response_type="object"):
+def save_predictor(restored_model, training_configuration, comment, version, response_type="object"):
     # This method cannot be called via HTTP API
     assert response_type in ["object", "json"]
-    predictor = Predictor.persist(df, clf, comment, version, target)
+    clf = restored_model['clf']
+    df = restored_model['X']
+    df[training_configuration.target] = restored_model['y']
+    predictor = Predictor.persist(df, clf, training_configuration, comment, version)
     if response_type == "json":
         return json.dumps(predictor.to_dict())
     else:
@@ -61,7 +64,7 @@ def predict_outcome(
             # special case, because patient_id could be 0 (evaluates False)
             patient_id = request.args.get('patient', type=int)
         df = predictor.get_data()
-        del df[predictor.target]
+        del df[predictor.training_configuration.target]
         features = list(df.iloc[patient_id])
 
     clf = predictor.get_clf()

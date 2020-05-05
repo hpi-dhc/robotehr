@@ -8,12 +8,11 @@ from robotehr.pipelines.supporters.preprocessing import recursive_feature_elimin
 from robotehr.pipelines.supporters.scoring import calculate_metrics
 
 
-def restore_model(pipeline_id, config, algorithm, sampler):
-    tc = get_training_configuration(pipeline_id=pipeline_id, response_type="object", config=config)
-    df = pd.read_csv(tc.training_data.path)
+def restore_model(training_configuration, algorithm, sampler):
+    df = pd.read_csv(training_configuration.training_data.path)
 
-    X = df.drop(columns=[config['target']])
-    y = df[config['target']]
+    X = df.drop(columns=[training_configuration.target])
+    y = df[training_configuration.target]
 
     result = recursive_feature_elimination(
         X=X,
