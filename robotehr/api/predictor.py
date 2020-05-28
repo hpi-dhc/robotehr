@@ -67,9 +67,8 @@ def predict_outcome(
         del df[predictor.training_configuration.target]
         features = list(df.iloc[patient_id])
 
-    clf = predictor.get_clf()
     prediction = {
-        'predicted_label': clf.predict([features])[0],
-        'class_probabilities': clf.predict_proba([features])[0].tolist()
+        'predicted_label': predictor.clf.predict([features])[0],
+        'class_probabilities': predictor.clf.predict_proba([features])[0].tolist()
     }
     return build_response(prediction, response_type)

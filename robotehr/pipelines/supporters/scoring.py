@@ -10,8 +10,24 @@ from sklearn.metrics import (
     precision_recall_curve,
     recall_score,
     roc_auc_score,
+    confusion_matrix
 )
 
+
+def advertised_metrics():
+    return [
+        "average_precision",
+        "f1",
+        "precision",
+        "recall",
+        "accuracy",
+        "auc_roc",
+        "auc_prc",
+        "specificity",
+        "sensitivity",
+        "ppv",
+        "npv"
+    ]
 
 def calculate_metrics(evaluation):
     precision, recall, _ = precision_recall_curve(
@@ -20,7 +36,7 @@ def calculate_metrics(evaluation):
     )
     auc_prc = auc(recall, precision)
 
-    return {
+    scores = {
         "average_precision": average_precision_score(
             evaluation["y_true"], evaluation["y_probs"]
         ),
@@ -38,8 +54,45 @@ def calculate_metrics(evaluation):
             evaluation["y_true"], evaluation["y_probs"]
         ),
         "auc_prc": auc_prc,
+        "sensitivity": sensitivity_score(evaluation),
+        "specificity": specificity_score(evaluation),
+        "ppv": ppv_score(evaluation),
+        "npv": npv_score(evaluation),
         **evaluation
     }
+    return scores
+
+
+def specificity_score(evaluation):
+    tn, fp, fn, tp = confusion_matrix(
+        evaluation["y_true"],
+        evaluation["y_pred"]
+    ).ravel()
+    return tn / (tn + fp)
+
+
+def sensitivity_score(evaluation):
+    tn, fp, fn, tp = confusion_matrix(
+        evaluation["y_true"],
+        evaluation["y_pred"]
+    ).ravel()
+    return tp / (tp + fn)
+
+
+def ppv_score(evaluation):
+    tn, fp, fn, tp = confusion_matrix(
+        evaluation["y_true"],
+        evaluation["y_pred"]
+    ).ravel()
+    return tp / (tp + fp)
+
+
+def npv_score(evaluation):
+    tn, fp, fn, tp = confusion_matrix(
+        evaluation["y_true"],
+        evaluation["y_pred"]
+    ).ravel()
+    return tn / (tn + fn)
 
 
 def score_auc_nbc(training_result, tr_start=0.01, tr_end=0.99, tr_step=0.01, metric_type="treated"):

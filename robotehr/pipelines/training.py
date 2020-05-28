@@ -20,7 +20,8 @@ from robotehr.utils import http_post
 def load_features_and_transform(
     training_configuration,
     data_loader,
-    bin_size=30
+    bin_size=30,
+    persist_data=True
 ):
     target = training_configuration.target
     cohort = training_configuration.training_pipeline.cohort.get_fiber()
@@ -113,10 +114,11 @@ def load_features_and_transform(
     data = data_loader.transform(data, target)
 
     ## persist training data
-    TrainingData.persist(
-        training_configuration=training_configuration,
-        data=data
-    )
+    if persist_data:
+        TrainingData.persist(
+            training_configuration=training_configuration,
+            data=data
+        )
 
     X, y = data.drop(columns=[target]), data[target]
     return X, y
@@ -136,7 +138,8 @@ def train_iteration(
     feature_type_numeric,
     bin_size,
     rfe__run,
-    rfe__step_size
+    rfe__step_size,
+    persist_data
 ):
     training_configuration = TrainingConfiguration.persist(
         training_pipeline=training_pipeline,
@@ -155,7 +158,8 @@ def train_iteration(
     X, y = load_features_and_transform(
         training_configuration=training_configuration,
         data_loader=data_loader,
-        bin_size=bin_size
+        bin_size=bin_size,
+        persist_data=persist_data
     )
 
     iterator = product(algorithms, samplers)
@@ -225,7 +229,8 @@ def execute(
     feature_type_numeric,
     bin_size=30,
     rfe__run=False,
-    rfe__step_size=50
+    rfe__step_size=50,
+    persist_data=True
 ):
     training_pipeline = TrainingPipeline.create(
         comment=comment,
@@ -258,7 +263,8 @@ def execute(
                 feature_type_numeric=feature_type_numeric,
                 bin_size=bin_size,
                 rfe__run=rfe__run,
-                rfe__step_size=rfe__step_size
+                rfe__step_size=rfe__step_size,
+                persist_data=persist_data
             )
             i += 1
             if i % 10 == 0:

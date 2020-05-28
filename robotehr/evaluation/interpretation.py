@@ -48,10 +48,8 @@ def global_explanation(
     explainers,
     num_features=20,
 ):
-    data = predictor.get_data()
-    X = data[predictor.get_features()]
-    y = predictor.get_target()
-    clf = predictor.get_clf()
+    X = predictor.get_features()
+    y = predictor.get_targets()
 
     X_train, X_test, y_train, y_test = train_test_split(
         X,
@@ -68,7 +66,7 @@ def global_explanation(
             'num_features': num_features,
         },
         target='target',
-        models={'results': clf},
+        models={'results': predictor.clf},
         explainers=explainers
     )['results']
     return explanations

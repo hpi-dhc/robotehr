@@ -74,18 +74,33 @@ class Predictor(Base):
     def get_data(self):
         return pd.read_csv(self.data_path)
 
+    @property
+    def feature_names(self):
+        df = pd.read_csv(self.data_path)
+        feature_names = list(df.columns)
+        feature_names.remove(self.target)
+        return feature_names
+
     def get_features(self):
         df = pd.read_csv(self.data_path)
-        features = list(df.columns)
-        features.remove(self.training_configuration.target)
-        return features
+        df.drop(columns=[self.target], inplace=True)
+        return df
 
-    def get_target(self):
+    def get_targets(self):
         df = pd.read_csv(self.data_path)
-        return df[self.training_configuration.target]
+        return df[self.target]
 
-    def get_clf(self):
+    def set_interpretation(self, interpretation_path):
+        self.interpretation_path = interpretation_path
+        session.commit()
+
+    @property
+    def clf(self):
         return dill.load(open(self.predictor_path, 'rb'))
+
+    @property
+    def target(self):
+        return self.training_configuration.target
 
     def __repr__(self):
         return f'{self.comment} ({self.version}) - {self.training_configuration.target}'

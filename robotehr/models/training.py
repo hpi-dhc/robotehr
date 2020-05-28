@@ -145,6 +145,13 @@ class TrainingConfiguration(Base):
         ).first()
         return obj
 
+    @classmethod
+    def load(cls, id):
+        obj = session.query(cls).filter_by(
+            training_configuration_id=id
+        ).first()
+        return obj
+
     def __repr__(self):
         return f'{self.threshold_occurring} - [{self.window_start_occurring}, {self.window_end_occurring}] - {self.feature_type_occurring}/{self.feature_type_numeric}'
 
@@ -318,3 +325,12 @@ class TrainingResult(Base):
             'recall_mean': self.recall_mean,
             'average_precision_mean': self.average_precision_mean,
         }
+
+    @classmethod
+    def load_by_config(cls, training_configuration, algorithm, sampler):
+        obj = session.query(cls).filter_by(
+            training_configuration_id=training_configuration.id,
+            algorithm=algorithm,
+            sampler=sampler
+        ).first()
+        return obj

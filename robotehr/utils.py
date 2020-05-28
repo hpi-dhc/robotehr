@@ -20,14 +20,16 @@ def http_post(url, data, headers={}):
 
 
 class FriendlyNamesConverter:
+    def rename_columns(self, df):
+        replacements = {}
+        for column in df.columns:
+            replacements[column] = self.get(column)
+        return replacements
+
     def get(self, feature):
         # does not support time window information inside feature name yet
-        if (
-            feature == "age_in_days"
-        ) or (
-            feature.startswith(('gender', 'religion'))
-        ):
-            return feature.replace('_', ' ')
+        if feature.startswith(('age', 'gender', 'religion', 'race')):
+            return feature.replace('_', ' ').replace('.', '|')
 
         split_name = feature.split('__')
         if split_name[1] in [
