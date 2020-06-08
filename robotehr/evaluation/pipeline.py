@@ -10,9 +10,17 @@ from morpher.plots import plot_dc
 from robotehr.api.training import get_training_results
 
 
-def calculate_average_metric_score_by_parameter(pipeline_id, metric, parameter):
-    df = get_training_results(pipeline_id, sort_by=metric, columns=[parameter], metrics=[metric], response_type="pandas")
-    df = df.groupby(parameter).mean().sort_values(by=metric, ascending=False).reset_index()
+def calculate_average_metric_score_by_parameter(pipeline_id, metric, parameter, restrictions=[]):
+    restriction_columns = [i[0] for i in restrictions]
+    df = get_training_results(pipeline_id, sort_by=metric, columns=[parameter] + restriction_columns, metrics=[metric], response_type="pandas")
+    for col, filter_type, limit in restrictions:
+        if filter_type == '__lt__':
+            df = df[df[col].__lt__(limit)]
+        if filter_type == '__gt__':
+            df = df[df[col].__gt__(limit)]
+        if filter_type == '__eq__':
+            df = df[df[col].__eq__(limit)]
+    df = df.groupby(parameter).median().sort_values(by=metric, ascending=False).reset_index()
     return df
 
 
@@ -104,10 +112,17 @@ def plot_performance_heatmap(
     target,
     dimensions=['window_start_occurring', 'threshold_occurring'],
     annot=False,
-    filename=None
+    filename=None,
+    shorten_title=False,
 ):
+    TITLE_MAP = {
+        'LogisticRegression': 'LR',
+        'GradientBoostingDecisionTree': 'GBDT',
+        'RandomForest': 'RF',
+        'MEAN ': ''
+    }
     df = get_training_results(pipeline_id, metrics=metrics, response_type="pandas")
-    fig = plt.figure(figsize=(10 * len(algorithms), 10 * len(metrics)))
+    fig = plt.figure(figsize=(11 * len(algorithms), 10 * len(metrics)))
 
     vmins = {}
     vmaxs = {}
@@ -139,10 +154,12 @@ def plot_performance_heatmap(
             ax.xaxis.label.set_size(18)
             ax.yaxis.label.set_size(18)
             metric = metrics[j].replace('_', ' ').upper()
-            plt.title(
-                f'Mean {metric} Score for {algorithms[i]}',
-                fontsize=20
-            )
+
+            title = f'Mean {metric} Score for {algorithms[i]}'
+            if shorten_title:
+                for key in TITLE_MAP.keys():
+                    title = title.replace(key, TITLE_MAP[key])
+            plt.title(title, fontsize=20)
             n += 1
     if filename:
         fig.savefig(filename, dpi=300, bbox_inches="tight")
@@ -284,7 +301,8 @@ def plot_multiple_pipeline_comparison(
     metric,
     data_points_per_pipeline=None,
     plot_type="box",
-    restrictions=[]
+    restrictions=[],
+    ax=None
 ):
     results = pd.DataFrame(columns=[metric, 'window_end_numeric'])
     for pipeline_id in pipeline_ids:
@@ -321,13 +339,15 @@ def plot_multiple_pipeline_comparison(
         return sns.boxplot(
             x="days after tx",
             y=metric,
-            data=data
+            data=data,
+            ax=ax
         )
     else:
         return sns.scatterplot(
             x="days after tx",
             y=metric,
-            data=data
+            data=data,
+            ax=ax
         )
 
 

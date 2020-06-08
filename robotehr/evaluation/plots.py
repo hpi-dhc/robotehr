@@ -31,12 +31,13 @@ def clinical_usefulness_graph(training_results, metric_type="treated", filename=
     return fig
 
 
-def calibration_plot(predictor, name):
+def calibration_plot(predictor, name, **kwargs):
     train_data, test_data = train_test_split(predictor.get_data())
 
     plot_cc(
-        {name: predictor.clf},
-        train_data,
-        test_data,
-        predictor.target,
+        models={name: predictor.clf},
+        train_data=train_data,
+        test_data=test_data,
+        target=predictor.target,
+        **kwargs
     )

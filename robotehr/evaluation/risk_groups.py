@@ -25,7 +25,7 @@ def _age_conversion(row):
     return row['age_in_days'] / 365
 
 
-def make_risk_groups(predictor, data_loader):
+def make_risk_groups(predictor, data_loader, calibration_method="sigmoid"):
     X_raw, _ = load_features_and_transform(
         training_configuration=predictor.training_configuration,
         data_loader=data_loader,
@@ -41,7 +41,11 @@ def make_risk_groups(predictor, data_loader):
     )
 
     # fit and calibrate model on training data
-    calibrator = CalibratedClassifierCV(predictor.clf.clf, cv=5)
+    calibrator = CalibratedClassifierCV(
+        base_estimator=predictor.clf.clf,
+        cv="prefit",
+        method=calibration_method
+    )
     calibrator.fit(X_train, y_train)
     # evaluate the model
     y_hat = calibrator.predict_proba(X_test)[:,1]
@@ -63,18 +67,32 @@ def make_risk_groups(predictor, data_loader):
     return df.sort_values(by="risk group")
 
 
-def plot_risk_groups(df, features):
-    fig, ax = plt.subplots(nrows=5, ncols=6, figsize=[16,9])
+def plot_risk_groups(df, features, friendly_names_converter=None, filename=''):
+    fig, ax = plt.subplots(nrows=1, ncols=6, figsize=[16,3])
     fig.tight_layout(pad=3.0)
     for i in range(len(features)):
-
         row_index = int(i / 6)
         col_index = i % 6
-        sns.violinplot(x="risk group", y=features[i], data=df, palette="muted", ax=ax[row_index][col_index])
-        # title = FriendlyNamesConverter().get(features[i])
-        title = features[i]
+        sns.violinplot(
+            x="risk group",
+            y=features[i],
+            data=df,
+            palette="muted",
+            # ax=ax[row_index][col_index],
+            ax=ax[col_index],
+        )
+        if friendly_names_converter:
+            title = friendly_names_converter.get(features[i])
+        else:
+            title = features[i]
         if len(title) > 50:
             title = f'{title[:50]} ...'
-        ax[row_index][col_index].set_title(f'{title}', fontsize=10)
-        ax[row_index][col_index].set_xlabel('')
-        ax[row_index][col_index].set_ylabel('')
+        # ax[row_index][col_index].set_title(f'{title}', fontsize=10)
+        # ax[row_index][col_index].set_xlabel('')
+        # ax[row_index][col_index].set_ylabel('')
+        ax[col_index].set_title(f'{title}', fontsize=10)
+        ax[col_index].set_xlabel('')
+        ax[col_index].set_ylabel('')
+    if filename:
+        fig.savefig(filename, dpi=300, bbox_inches="tight")
+    return fig
