@@ -10,6 +10,7 @@ from robotehr.pipelines.supporters.scoring import calculate_metrics
 
 def restore_model(training_configuration, algorithm, sampler):
     df = pd.read_csv(training_configuration.training_data.path)
+    # TODO: apply transformation here
 
     X = df.drop(columns=[training_configuration.target])
     y = df[training_configuration.target]

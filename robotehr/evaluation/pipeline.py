@@ -119,6 +119,7 @@ def plot_performance_heatmap(
         'LogisticRegression': 'LR',
         'GradientBoostingDecisionTree': 'GBDT',
         'RandomForest': 'RF',
+        'DecisionTree': 'DT',
         'MEAN ': ''
     }
     df = get_training_results(pipeline_id, metrics=metrics, response_type="pandas")
