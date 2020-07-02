@@ -3,6 +3,7 @@ import json
 import sys
 from pydoc import locate
 
+import fiber.condition
 import requests
 
 
