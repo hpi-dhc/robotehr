@@ -8,26 +8,32 @@ from robotehr.pipelines.supporters.preprocessing import recursive_feature_elimin
 from robotehr.pipelines.supporters.scoring import calculate_metrics
 
 
-def restore_model(training_configuration, algorithm, sampler):
+def restore_model(training_configuration, algorithm, sampler, run_rfe=True):
     df = pd.read_csv(training_configuration.training_data.path)
     # TODO: apply transformation here
-
-    X = df.drop(columns=[training_configuration.target])
-    y = df[training_configuration.target]
-
-    result = recursive_feature_elimination(
-        X=X,
-        y=y,
-        step_size=50,
-        n_splits=5,
-        algorithm=algorithm,
-        filename="",
-        create_figure=False
+    X, y = data_loader.transform(
+        X=data.drop(columns=[target]),
+        y=data[target]
     )
-    X_supported = result['X_supported']
 
     X_train, X_test, y_train, y_test = train_test_split(X_supported, y, test_size=0.2, random_state=42)
-    X_train_sampled, y_train_sampled = sampler().fit_resample(X_train, y_train)
+
+    X_train, y_train = data_loader.transform_training_data(X_train, y_train)
+    X_test, y_test = data_loader.transform_test_data(X_test, y_test)
+
+    if rfe__run and algorithm().clf.__class__ != DummyClassifier:
+        rfe = RFE(
+            estimator=algorithm(),
+            step=50,
+        )
+
+        X_train_supported = rfe.fit_transform(X_train, y_train)
+        X_test_supported = rfe.transform(X_test)
+    else:
+        X_train_supported = X_train.copy()
+        X_test_supported = X_test.copy()
+
+    X_train_sampled, y_train_sampled = sampler().fit_resample(X_train_supported, y_train)
     clf = algorithm()
     clf.fit(X_train_sampled, y_train_sampled)
 
@@ -37,6 +43,8 @@ def restore_model(training_configuration, algorithm, sampler):
 
     return {
         'clf': clf,
-        'X': X_supported,
-        'y': y
+        'X_train': X_train_sampled,
+        'y_train': y_train_sampled,
+        'X_test': X_test_supported,
+        'y_test': y_test
     }

@@ -25,7 +25,7 @@ def _age_conversion(row):
     return row['age_in_days'] / 365
 
 
-def make_risk_groups(predictor, data_loader, calibration_method="sigmoid", legacy=False):
+def make_risk_groups(predictor, data_loader, calibration_method="sigmoid"):
     X_raw, _ = load_features_and_transform(
         training_configuration=predictor.training_configuration,
         data_loader=data_loader,

@@ -16,7 +16,7 @@ def static_risk_change_analysis(
         config=config
     )
     data = pd.read_csv(tc.training_data.path)
-    # TODO: apply transformation here
+
     changes = []
     for trait in data.columns:
         if trait != target:
