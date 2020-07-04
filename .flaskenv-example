@@ -1,0 +1,24 @@
+# FIBER
+FIBER_DB_TYPE=hana
+FIBER_DB_PASSWORD=fiber-password-1234
+FIBER_DB_SCHEMA=msdw_2018
+FIBER_MIN_DAYS_FILTER_ACTIVE=1
+FIBER_DB_HOST=0.0.0.0
+FIBER_DB_PORT=39041
+FIBER_DB_USER=fiber-user-1234
+
+# ROBOTEHR
+ROBOTEHR_DB_URI='postgres://postgres:changeme@localhost:5432/robotehr'
+ROBOTEHR_BASE_PATH='/tmp/robotehr-data'
+ROBOTEHR_WEBHOOK_URL='localhost:5000'
+
+# FLASK
+FLASK_APP=server.py
+FLASK_ENV=development
+SECRET_KEY='secret-key-change-me'
+
+# MORPHER (no values required here)
+DB_USER=
+DB_PASSWORD=
+DB_ADDRESS=
+DB_PORT=
