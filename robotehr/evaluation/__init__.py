@@ -45,7 +45,7 @@ def print_best_model_with_confidence(
     pipeline_id, metrics=["auc_roc", "specificity", "sensitivity", "ppv", "npv"]
 ):
     best_model = get_training_results(
-        sort_by="auc_roc_mean", pipeline_id=pipeline_id, response_type="pandas"
+        sort_by="auc_roc_mean", pipeline_id=pipeline_id, response_type="pandas", n_rows=1,
     )[
         ["algorithm", "sampler", "threshold_numeric", "window_start_numeric"]
     ].iloc[
