@@ -6,6 +6,7 @@ from fiber.dataframe.helpers import get_name_for_interval
 from fiber.dataframe import merge_to_base, column_threshold_clip
 from fiberutils.cohort_utils import threshold_clip_time_series, pivot_time_series
 from sklearn.dummy import DummyClassifier
+from sklearn.feature_selection import RFE
 from sklearn.model_selection import StratifiedKFold
 
 from robotehr.config import WEBHOOK_URL
@@ -76,7 +77,7 @@ def load_features_and_transform(
             cohort.occurrences,
             [
                 x.filter(
-                    regex=(data_loader.agg_func_regex + "|medical_record_number|age_in_days")
+                    regex=(data_loader.column_selector + "|medical_record_number|age_in_days")
                 )
                 for x in numeric_feature_dfs
             ]
@@ -90,7 +91,7 @@ def load_features_and_transform(
         cohort.occurrences,
         [
             x.filter(
-                regex=(data_loader.agg_func_regex + "|medical_record_number|age_in_days")
+                regex=(data_loader.column_selector + "|medical_record_number|age_in_days")
             )
             for x in occurring_feature_dfs
         ]
@@ -111,7 +112,6 @@ def load_features_and_transform(
         numeric_df,
         occurring_df,
     )
-    data = data_loader.transform(data, target)
 
     ## persist training data
     if persist_data:
@@ -119,8 +119,10 @@ def load_features_and_transform(
             training_configuration=training_configuration,
             data=data
         )
-
-    X, y = data.drop(columns=[target]), data[target]
+    X, y = data_loader.transform(
+        X=data.drop(columns=[target]),
+        y=data[target]
+    )
     return X, y
 
 
@@ -162,38 +164,38 @@ def train_iteration(
         persist_data=persist_data
     )
 
-    iterator = product(algorithms, samplers)
     for algorithm in algorithms:
-        if rfe__run and algorithm().clf.__class__ != DummyClassifier:
-            result = recursive_feature_elimination(
-                X=X,
-                y=y,
-                step_size=rfe__step_size,
-                n_splits=5,
-                algorithm=algorithm,
-                filename="",
-                create_figure=False
-            )
-            X_supported = result['X_supported']
-        else:
-            X_supported = X.copy()
-
         for sampler in samplers:
             metrics = []
             data_statistics = []
             cv = StratifiedKFold(n_splits=5)
-            for train_idx, test_idx, in cv.split(X_supported, y):
-                X_train, y_train = X_supported.loc[train_idx], y.loc[train_idx]
-                X_test, y_test = X_supported.loc[test_idx], y.loc[test_idx]
+            for train_idx, test_idx, in cv.split(X, y):
+                X_train, y_train = X.loc[train_idx], y.loc[train_idx]
+                X_test, y_test = X.loc[test_idx], y.loc[test_idx]
 
-                X_train_sampled, y_train_sampled = sampler().fit_resample(X_train, y_train)
+                X_train, y_train = data_loader.transform_training_data(X_train, y_train)
+                X_test, y_test = data_loader.transform_test_data(X_test, y_test)
+
+                if rfe__run and algorithm().clf.__class__ != DummyClassifier:
+                    rfe = RFE(
+                        estimator=algorithm(),
+                        step=rfe__step_size,
+                    )
+
+                    X_train_supported = rfe.fit_transform(X_train, y_train)
+                    X_test_supported = rfe.transform(X_test)
+                else:
+                    X_train_supported = X_train.copy()
+                    X_test_supported = X_test.copy()
+
+                X_train_sampled, y_train_sampled = sampler().fit_resample(X_train_supported, y_train)
                 clf = algorithm()
                 clf.fit(X_train_sampled, y_train_sampled)
 
                 evaluation = {
                     'y_true': y_test,
-                    'y_pred': clf.predict(X_test),
-                    'y_probs': clf.predict_proba(X_test)[:, 1],
+                    'y_pred': clf.predict(X_test_supported),
+                    'y_probs': clf.predict_proba(X_test_supported)[:, 1],
                 }
                 metrics.append(calculate_metrics(evaluation))
                 data_statistics.append({

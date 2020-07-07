@@ -5,30 +5,42 @@ from morpher.plots import plot_dc, plot_cc
 from sklearn.model_selection import train_test_split
 
 
-def clinical_usefulness_graph(training_results, metric_type="treated", filename="", label=""):
-    fig = plt.figure(figsize=[12,8])
+def clinical_usefulness_graph(training_results, filename="", label="", index=None, **kwargs):
     for tr in training_results:
         label = label or tr.algorithm
         outcome = dill.load(open(tr.evaluation_path, 'rb'))
-        for index, row in outcome.iterrows():
-
+        if index or index == 0:
+            row = outcome.iloc[index]
             plot_dc(
                 results={
                     tr.algorithm: {
                         'y_true': row.y_true,
                         'y_pred': row.y_pred,
                         'y_probs': row.y_probs,
-                        'label': f'{label} | (fold #{index})'
+                        'label': f'{label}'
                     }
                 },
-                tr_start=0.01,
-                tr_end=0.99,
-                tr_step=0.01,
-                metric_type=metric_type
+                **kwargs
             )
+        else:
+            for index, row in outcome.iterrows():
+                plot_dc(
+                    results={
+                        tr.algorithm: {
+                            'y_true': row.y_true,
+                            'y_pred': row.y_pred,
+                            'y_probs': row.y_probs,
+                            # 'label': f'{label} | (fold #{index})'
+                            'label': f'{label} {index}'
+                        }
+                    },
+                    **kwargs
+                )
     if filename:
+        fig = plt.gcf()
         fig.savefig(filename, dpi=300, bbox_inches="tight")
-    return fig
+        return fig
+
 
 
 def calibration_plot(predictor, name, **kwargs):

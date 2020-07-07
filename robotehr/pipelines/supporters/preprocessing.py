@@ -32,12 +32,18 @@ def recursive_feature_elimination(X, y, algorithm, step_size=50, create_figure=F
 
 
 class DataLoader:
-    def __init__(self, agg_func_regex, prepare_data_function):
-        self.agg_func_regex = agg_func_regex
-        self.prepare_data_function = prepare_data_function
+    def __init__(self, column_selector):
+        self.column_selector = column_selector
+        self.objects = {}
 
-    def transform(self, df, target):
-        return self.prepare_data_function(df, target)
+    def transform(self, X, y):
+        return NotImplementedError
+
+    def transform_training_data(self, X_train, y_train):
+        return NotImplementedError
+
+    def transform_test_data(self, X_test, y_test):
+        return NotImplementedError
 
     def dump(self, path):
         return dill.dump(self, open(path, "wb"))

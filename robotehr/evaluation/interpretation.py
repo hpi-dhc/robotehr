@@ -1,8 +1,12 @@
 import pandas as pd
+import shap
+import morpher.config
 from morpher.jobs import Explain
+from morpher.plots import plot_feat_importances
 from sklearn.model_selection import train_test_split
 
 from robotehr.api.training import get_training_configuration
+from robotehr.api.predictor import get_predictor_details
 
 
 def static_risk_change_analysis(
@@ -16,6 +20,7 @@ def static_risk_change_analysis(
         config=config
     )
     data = pd.read_csv(tc.training_data.path)
+
     changes = []
     for trait in data.columns:
         if trait != target:
@@ -70,3 +75,55 @@ def global_explanation(
         explainers=explainers
     )['results']
     return explanations
+
+
+def calculate_shap_values(predictor_id):
+    predictor = get_predictor_details(
+        predictor_id=predictor_id,
+        response_type="object"
+    )
+    X_train, X_test, _, _ = train_test_split(
+        predictor.get_features(),
+        predictor.get_targets(),
+        test_size=0.2,
+        random_state=0
+    )
+    explainer = shap.KernelExplainer(predictor.clf.predict_proba, X_train, link="logit")
+    shap_values = explainer.shap_values(X_test, nsamples=100)
+    return {
+        'X_test': X_test,
+        'shap_values': shap_values,
+        'explainer': explainer
+    }
+
+
+def shap_plot(shap_values, X_test, **kwargs):
+    shap.summary_plot(
+        shap_values[1],
+        X_test,
+        **kwargs
+    )
+
+
+def calculate_lime_values(predictor_id, num_features=None):
+    predictor = get_predictor_details(predictor_id=predictor_id, response_type="object")
+    explanations = global_explanation(predictor, num_features=30, explainers=[morpher.config.explainers.LIME])
+
+    if num_features:
+        explanations_ = {}
+        for i in list(explanations[morpher.config.explainers.LIME])[:num_features]:
+            explanations_[i] = explanations[morpher.config.explainers.LIME][i]
+        return explanations_
+    else:
+        return explanations
+
+
+def plot_lime_values(explanations, friendly_names, ax, fig=None, filename=None):
+    plot_feat_importances(
+        explanations,
+        friendly_names=friendly_names,
+        title="LIME Feature Importance",
+        ax=ax
+    )
+    if fig and filename:
+        fig.savefig(filename, bbox_inches='tight')
