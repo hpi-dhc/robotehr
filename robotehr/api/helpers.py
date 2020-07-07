@@ -8,6 +8,7 @@ def assert_response_type(response_type):
 
 
 def build_response(results, response_type):
+    """Builds response based on given response type"""
     if results.__class__ == list and not results[0].__class__ == dict:
         results = [item.as_dict() for item in results]
     if response_type == "object":
@@ -19,6 +20,7 @@ def build_response(results, response_type):
 
 
 def sort_and_filter(q, sort_by=None, sort_order=None, n_rows=None):
+    """Adds sqlalchemy clauses for optional sorting and filtering"""
     if sort_by:
         if sort_order == "asc":
             q = q.order_by(asc(sort_by))

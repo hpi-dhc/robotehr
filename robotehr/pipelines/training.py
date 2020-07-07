@@ -24,6 +24,10 @@ def load_features_and_transform(
     bin_size=30,
     persist_data=True
 ):
+    """
+    Load features from feature pipeline.
+    Then apply the DataLoader for feature transformation.
+    """
     target = training_configuration.target
     cohort = training_configuration.training_pipeline.cohort.get_fiber()
     onset_df = training_configuration.training_pipeline.onset_dataframe.get_df(target)
@@ -143,6 +147,11 @@ def train_iteration(
     rfe__step_size,
     persist_data
 ):
+    """
+    Load features from configuration and dataloader, create cross-product
+    from samplers, algorithms, etc.
+    Train model, evaluate with metrics, and persist stuff.
+    """
     training_configuration = TrainingConfiguration.persist(
         training_pipeline=training_pipeline,
         threshold_occurring=threshold_occurring,
@@ -234,6 +243,9 @@ def execute(
     rfe__step_size=50,
     persist_data=True
 ):
+    """
+    Driver function for the training pipeline execution.
+    """
     training_pipeline = TrainingPipeline.create(
         comment=comment,
         version=version,

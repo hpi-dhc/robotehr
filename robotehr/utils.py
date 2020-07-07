@@ -21,6 +21,10 @@ def http_post(url, data, headers={}):
 
 
 class FriendlyNamesConverter:
+    """
+    Utility class to convert feature names from FIBER unsupervised naming
+    scheme to a reasonably named style.
+    """
     def rename_columns(self, df):
         replacements = {}
         for column in df.columns:

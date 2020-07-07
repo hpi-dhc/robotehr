@@ -15,6 +15,10 @@ from robotehr.pipelines.supporters.scoring import (
 
 
 def _confidence_interval(results, interval=0.95):
+    """
+    Calculate confidence interval based on k results,
+    from cross-validation.
+    """
     mean = np.mean(results)
     interval = st.t.interval(
         interval, len(results) - 1, loc=mean, scale=st.sem(results)
@@ -25,6 +29,9 @@ def _confidence_interval(results, interval=0.95):
 def calculate_confidence_interval(
     pipeline_id, config, algorithm, sampler, metric
 ):
+    """
+    Wrapper to calculate metric and confidence interval from training results
+    """
     assert metric in advertised_metrics()
     tc = get_training_configuration(
         pipeline_id=pipeline_id, config=config, response_type="object"
@@ -44,6 +51,10 @@ def calculate_confidence_interval(
 def print_best_model_with_confidence(
     pipeline_id, metrics=["auc_roc", "specificity", "sensitivity", "ppv", "npv"]
 ):
+    """
+    Create latex table rows for the best model within a pipeline,
+    as seen in action in the paper + thesis.
+    """
     best_model = get_training_results(
         sort_by="auc_roc_mean", pipeline_id=pipeline_id, response_type="pandas", n_rows=1,
     )[

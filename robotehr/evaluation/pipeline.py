@@ -11,6 +11,9 @@ from robotehr.api.training import get_training_results
 
 
 def calculate_average_metric_score_by_parameter(pipeline_id, metric, parameter, restrictions=[]):
+    """
+    Calculates the average score for a given metric (e.g. AUROC) and a parameter (e.g. algorithm)
+    """
     restriction_columns = [i[0] for i in restrictions]
     df = get_training_results(pipeline_id, sort_by=metric, columns=[parameter] + restriction_columns, metrics=[metric], response_type="pandas")
     for col, filter_type, limit in restrictions:
@@ -31,6 +34,9 @@ def calculate_average_metric_score(
     target,
     dimensions=['window_start_occurring', 'threshold_occurring']
 ):
+    """
+    Calculates the average score for a given metric (e.g. AUROC) and two dimensions.
+    """
     assert len(dimensions) == 2
     x_dimension, y_dimension = dimensions
     col_replace = {
@@ -62,6 +68,9 @@ def calculate_heatmap_quandrant_averages(
     target,
     lead_condition_type='occurring'
 ):
+    """
+    Calculate average metric score per Heatmap quadrant.
+    """
     assert lead_condition_type in ['occurring', 'numeric']
 
     threshold_column = f'threshold_{lead_condition_type}'
@@ -115,6 +124,10 @@ def plot_performance_heatmap(
     filename=None,
     shorten_title=False,
 ):
+    """
+    Plots the Heatmap for given metrics and algorithms, based on the
+    pipeline id.
+    """
     TITLE_MAP = {
         'LogisticRegression': 'LR',
         'GradientBoostingDecisionTree': 'GBDT',
@@ -227,6 +240,9 @@ def plot_performance_diff_heatmap(
     annot=False,
     filename=None
 ):
+    """
+    How does the performance differ between two pipeline runs?
+    """
     df = [
         get_training_results(pipeline_ids[0], metrics=metrics, response_type="pandas"),
         get_training_results(pipeline_ids[1], metrics=metrics, response_type="pandas")
@@ -305,6 +321,7 @@ def plot_multiple_pipeline_comparison(
     restrictions=[],
     ax=None
 ):
+    """How does the performance change between multiple pipelines?"""
     results = pd.DataFrame(columns=[metric, 'window_end_numeric'])
     for pipeline_id in pipeline_ids:
         cur_results = get_training_results(
@@ -353,6 +370,9 @@ def plot_multiple_pipeline_comparison(
 
 
 def plot_multiple_pipeline_rfe_effects(pipelines, metric, restrictions=[]):
+    """
+    How do multiple pipelines compare including changes through use of RFE?
+    """
     results = []
     for name, runs in pipelines.items():
         for identifier, uses_rfe in runs:

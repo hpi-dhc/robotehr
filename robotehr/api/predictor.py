@@ -56,6 +56,9 @@ def predict_outcome(
     patient_id=None,
     response_type="json"
 ):
+    """
+    Load predictor and predict outcome for patient
+    """
     assert_response_type(response_type)
     predictor_id = predictor_id or request.args.get('predictor', type=int)
     predictor = Predictor.load(id=predictor_id)

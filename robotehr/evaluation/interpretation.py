@@ -34,6 +34,9 @@ def static_risk_change_analysis(
 
 
 def _risk_change_by_boolean_feature(df, target, trait):
+    """
+    How much does the incidence change if a boolean feature is set vs is not.
+    """
     selection = df[df[trait] > 0]
     trait_incidence_rate = selection[target].sum() / len(selection)
 
@@ -53,6 +56,10 @@ def global_explanation(
     explainers,
     num_features=20,
 ):
+    """
+    Create global explanation with the specified explainers.
+    Wrapper for MORPHER function.
+    """
     X = predictor.get_features()
     y = predictor.get_targets()
 
@@ -78,6 +85,10 @@ def global_explanation(
 
 
 def calculate_shap_values(predictor_id):
+    """
+    Does what it says for SHAP.
+    Uses kernel explainer for full compatibility.
+    """
     predictor = get_predictor_details(
         predictor_id=predictor_id,
         response_type="object"
@@ -106,6 +117,10 @@ def shap_plot(shap_values, X_test, **kwargs):
 
 
 def calculate_lime_values(predictor_id, num_features=None):
+    """
+    Does what it says for LIME.
+    Uses global explanation defined above.
+    """
     predictor = get_predictor_details(predictor_id=predictor_id, response_type="object")
     explanations = global_explanation(predictor, num_features=30, explainers=[morpher.config.explainers.LIME])
 

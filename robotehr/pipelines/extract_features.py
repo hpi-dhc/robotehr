@@ -15,6 +15,9 @@ def _build_default_configs(
     agg_func: dict,
     **kwargs,
 ):
+    """
+    Creates non-binned configurations
+    """
     configs = []
     for window in windows:
         configs.append({
@@ -37,6 +40,9 @@ def _build_binned_configs(
     bin_size=30,
     **kwargs
 ):
+    """
+    Creates configurations for binned pipelines.
+    """
     configs = []
     for window in windows:
         for w in range(window[0], window[1], bin_size):
@@ -60,6 +66,9 @@ def _build_time_series_configs(
     min_threshold: int,
     **kwargs
 ):
+    """
+    Build configurations for time series pipelines.
+    """
     configs = []
     for window in windows:
         configs.append({
@@ -76,6 +85,9 @@ def pivot_data(
     cohort,
     feature_pipeline
 ):
+    """
+    Build configuration, extract, pivot and store.
+    """
     feature_type = pivot_configuration["feature_type"]
     fiber_cohort = Cohort.load_fiber(cohort.id)
 
@@ -117,6 +129,9 @@ def pivot_data(
 
 
 def execute(configuration, comment, version, cohort):
+    """
+    Driver function for feature pipeline execution.
+    """
     feature_pipeline = FeaturePipeline.persist(comment=comment, version=version, cohort=cohort)
 
     min_threshold = configuration["min_threshold"]

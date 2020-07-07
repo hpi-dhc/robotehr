@@ -6,6 +6,10 @@ from sklearn.model_selection import train_test_split
 
 
 def clinical_usefulness_graph(training_results, filename="", label="", index=None, **kwargs):
+    """
+    THE clinical usefulness graph.
+    Provide training results object.
+    """
     for tr in training_results:
         label = label or tr.algorithm
         outcome = dill.load(open(tr.evaluation_path, 'rb'))
@@ -30,7 +34,6 @@ def clinical_usefulness_graph(training_results, filename="", label="", index=Non
                             'y_true': row.y_true,
                             'y_pred': row.y_pred,
                             'y_probs': row.y_probs,
-                            # 'label': f'{label} | (fold #{index})'
                             'label': f'{label} {index}'
                         }
                     },
@@ -44,6 +47,9 @@ def clinical_usefulness_graph(training_results, filename="", label="", index=Non
 
 
 def calibration_plot(predictor, name, **kwargs):
+    """
+    Calibration plot for predictor, including sigmoid and isotonic calibration
+    """
     train_data, test_data = train_test_split(predictor.get_data())
 
     plot_cc(
